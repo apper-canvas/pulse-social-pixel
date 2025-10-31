@@ -2,7 +2,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import React, { useState } from "react";
 import { postService } from "@/services/api/postService";
 import { toast } from "react-toastify";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import ApperIcon from "@/components/ApperIcon";
 import Avatar from "@/components/atoms/Avatar";
 import Friends from "@/components/pages/Friends";
