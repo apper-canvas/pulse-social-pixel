@@ -1,8 +1,27 @@
-import { NavLink, useLocation } from "react-router-dom"
-import { cn } from "@/utils/cn"
-import ApperIcon from "@/components/ApperIcon"
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { postService } from "@/services/api/postService";
+import { toast } from "react-toastify";
+import { cn } from "@/lib/utils";
+import ApperIcon from "@/components/ApperIcon";
+import Avatar from "@/components/atoms/Avatar";
+import Friends from "@/components/pages/Friends";
+import PostComposer from "@/components/molecules/PostComposer";
 
 const Sidebar = () => {
+  const navigate = useNavigate()
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false)
+
+  const handleCreatePost = async (postData) => {
+    try {
+      await postService.create(postData)
+      toast.success('Post created successfully!')
+      setIsPostModalOpen(false)
+      navigate('/') // Navigate to home to see the new post
+    } catch (error) {
+      toast.error('Failed to create post. Please try again.')
+    }
+  }
   const location = useLocation()
 
   const navigationItems = [
@@ -80,10 +99,44 @@ const Sidebar = () => {
       <div className="p-6 border-t border-gray-200/50">
         <h3 className="text-sm font-semibold text-gray-500 mb-3">Quick Actions</h3>
         <div className="space-y-2">
-          <button className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">
+<button 
+            onClick={() => setIsPostModalOpen(true)}
+            className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-150"
+          >
             <ApperIcon name="Plus" className="h-4 w-4 mr-3 text-gray-400" />
             Create Post
           </button>
+
+          {/* Post Creation Modal */}
+          {isPostModalOpen && (
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              onClick={() => setIsPostModalOpen(false)}
+            >
+              <div 
+                className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-800">Create Post</h2>
+                    <button
+                      onClick={() => setIsPostModalOpen(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <ApperIcon name="X" className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <PostComposer 
+                    onCreatePost={handleCreatePost}
+                    className="border-0 shadow-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           <button className="flex items-center w-full px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-150">
             <ApperIcon name="UserPlus" className="h-4 w-4 mr-3 text-gray-400" />
             Find Friends
