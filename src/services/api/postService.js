@@ -91,13 +91,14 @@ export const postService = {
     return enhancedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   },
 
-  async create(postData) {
+async create(postData) {
     await delay(500)
     const maxId = Math.max(...posts.map(p => p.Id))
     const newPost = {
       ...postData,
       Id: maxId + 1,
       likes: [],
+      reactions: {},
       commentCount: 0,
       createdAt: new Date().toISOString()
     }
@@ -150,30 +151,59 @@ export const postService = {
     return { ...deletedPost }
   },
 
-  async likePost(postId, userId) {
+async addReaction(postId, userId, emoji) {
     await delay(250)
     const post = posts.find(p => p.Id === parseInt(postId))
     if (!post) {
       throw new Error("Post not found")
     }
     
+    // Initialize reactions if not present
+    if (!post.reactions) {
+      post.reactions = {}
+    }
+    
     const userIdStr = userId.toString()
-    if (!post.likes.includes(userIdStr)) {
-      post.likes.push(userIdStr)
+    
+    // Remove user from all other reactions
+    Object.keys(post.reactions).forEach(e => {
+      post.reactions[e] = post.reactions[e].filter(id => id !== userIdStr)
+      if (post.reactions[e].length === 0) {
+        delete post.reactions[e]
+      }
+    })
+    
+    // Add user to selected emoji
+    if (!post.reactions[emoji]) {
+      post.reactions[emoji] = []
+    }
+    if (!post.reactions[emoji].includes(userIdStr)) {
+      post.reactions[emoji].push(userIdStr)
     }
     
     return { ...post }
   },
 
-  async unlikePost(postId, userId) {
+  async removeReaction(postId, userId) {
     await delay(250)
     const post = posts.find(p => p.Id === parseInt(postId))
     if (!post) {
       throw new Error("Post not found")
     }
     
+    if (!post.reactions) {
+      return { ...post }
+    }
+    
     const userIdStr = userId.toString()
-    post.likes = post.likes.filter(id => id !== userIdStr)
+    
+    // Remove user from all reactions
+    Object.keys(post.reactions).forEach(emoji => {
+      post.reactions[emoji] = post.reactions[emoji].filter(id => id !== userIdStr)
+      if (post.reactions[emoji].length === 0) {
+        delete post.reactions[emoji]
+      }
+    })
     
     return { ...post }
   }
